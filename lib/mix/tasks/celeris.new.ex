@@ -3,7 +3,7 @@ defmodule Mix.Tasks.Celeris.New do
 
   @shortdoc "Creates a new application using the Celeris framework"
   @moduledoc """
-  Creates a new Celeris project with a standard Rails-like structure.
+  Creates a new Celeris project with a standard 
   """
 
   def run([app_name | _args]) do
@@ -37,19 +37,21 @@ defmodule Mix.Tasks.Celeris.New do
   end
 
   defp create_base_files(app_path, app_name) do
-    # Generate files like config, initial CRUD, and routes
-    # More detailed file content will be added here later
+    # Generate files for config, initial CRUD, and routes
     File.write!(Path.join(app_path, "config/config.exs"), base_config_content(app_name))
-    File.write!(Path.join(app_path, "app/controllers/page_controller.ex"), base_controller_content())
+    File.write!(Path.join(app_path, "app/controllers/page_controller.ex"), base_controller_content(app_name))
     File.write!(Path.join(app_path, "app/views/page/index.html.cel"), base_view_content())
     File.write!(Path.join(app_path, "lib/#{app_name}.ex"), app_module_content(app_name))
+    File.write!(Path.join(app_path, "db/migrate/20220101010101_create_test_table.exs"), migration_content())
   end
 
+  # Contents of the configuration file
   defp base_config_content(app_name) do
     """
-    use Mix.Config
+    import Config
 
-    config :#{app_name}, Celeris.Repo,
+    config :#{app_name}, #{String.capitalize(app_name)}.Repo,
+      adapter: Ecto.Adapters.Postgres,
       database: "#{app_name}_dev",
       username: "postgres",
       password: "postgres",
@@ -57,28 +59,61 @@ defmodule Mix.Tasks.Celeris.New do
     """
   end
 
-  defp base_controller_content do
+  # Initial controller for a sample PageController
+  defp base_controller_content(app_name) do
     """
-    defmodule Celeris.PageController do
-      use Celeris.Controller
+    defmodule #{String.capitalize(app_name)}.PageController do
+      use #{String.capitalize(app_name)}, :controller
 
       def index(conn, _params) do
-        render(conn, "index.html.cel", message: "Welcome to Celeris!")
+        conn
+        |> put_resp_content_type("text/html")
+        |> render("index.html.cel")
       end
     end
     """
   end
 
+  # Basic sample view
   defp base_view_content do
     """
-    <h1><%= message %></h1>
+    <h1>Welcome to Celeris!</h1>
+    <p>Your framework is up and running.</p>
     """
   end
 
+  # Main application module
   defp app_module_content(app_name) do
     """
     defmodule #{String.capitalize(app_name)} do
-      @moduledoc "Main application module for #{app_name}"
+      use Application
+
+      def start(_type, _args) do
+        children = [
+          #{String.capitalize(app_name)}.Repo,
+          #{String.capitalize(app_name)}.Router
+        ]
+
+        opts = [strategy: :one_for_one, name: #{String.capitalize(app_name)}.Supervisor]
+        Supervisor.start_link(children, opts)
+      end
+    end
+    """
+  end
+
+  defp migration_content do
+    """
+    defmodule Celeris.Repo.Migrations.CreateTestTable do
+      use Ecto.Migration
+
+      def change do
+        create table(:test) do
+          add :name, :string
+          add :value, :integer
+
+          timestamps()
+        end
+      end
     end
     """
   end
