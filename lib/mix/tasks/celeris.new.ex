@@ -3,7 +3,7 @@ defmodule Mix.Tasks.Celeris.New do
 
   @shortdoc "Creates a new application using the Celeris framework"
   @moduledoc """
-  Creates a new Celeris project with a standard 
+  Creates a new Celeris project with a standard.
   """
 
   def run([app_name | _args]) do
@@ -42,10 +42,9 @@ defmodule Mix.Tasks.Celeris.New do
     File.write!(Path.join(app_path, "app/controllers/page_controller.ex"), base_controller_content(app_name))
     File.write!(Path.join(app_path, "app/views/page/index.html.cel"), base_view_content())
     File.write!(Path.join(app_path, "lib/#{app_name}.ex"), app_module_content(app_name))
-    File.write!(Path.join(app_path, "db/migrate/20220101010101_create_test_table.exs"), migration_content())
+    File.write!(Path.join(app_path, "db/migrate/20220101010101_create_page_table.exs"), migration_content())
   end
 
-  # Contents of the configuration file
   defp base_config_content(app_name) do
     """
     import Config
@@ -55,11 +54,11 @@ defmodule Mix.Tasks.Celeris.New do
       database: "#{app_name}_dev",
       username: "postgres",
       password: "postgres",
-      hostname: "localhost"
+      hostname: "localhost",
+      pool_size: 10
     """
   end
 
-  # Initial controller for a sample PageController
   defp base_controller_content(app_name) do
     """
     defmodule #{String.capitalize(app_name)}.PageController do
@@ -74,7 +73,6 @@ defmodule Mix.Tasks.Celeris.New do
     """
   end
 
-  # Basic sample view
   defp base_view_content do
     """
     <h1>Welcome to Celeris!</h1>
@@ -82,7 +80,6 @@ defmodule Mix.Tasks.Celeris.New do
     """
   end
 
-  # Main application module
   defp app_module_content(app_name) do
     """
     defmodule #{String.capitalize(app_name)} do
@@ -103,13 +100,13 @@ defmodule Mix.Tasks.Celeris.New do
 
   defp migration_content do
     """
-    defmodule Celeris.Repo.Migrations.CreateTestTable do
+    defmodule Repo.Migrations.CreatePageTable do
       use Ecto.Migration
 
       def change do
-        create table(:test) do
-          add :name, :string
-          add :value, :integer
+        create table(:pages) do
+          add :title, :string
+          add :content, :text
 
           timestamps()
         end
